@@ -35,12 +35,17 @@
               ./Cargo.toml
               ./Cargo.lock
               ./src
+              ./data
             ];
           };
           cargoLock.lockFile = ./Cargo.lock;
           buildType = "dist";
 
           nativeBuildInputs = [ pkgs.makeWrapper ];
+
+          postInstall = ''
+            install -Dm644 data/psd-viewer.desktop $out/share/applications/psd-viewer.desktop
+          '';
 
           postFixup = ''
             patchelf --add-rpath ${pkgs.lib.makeLibraryPath (runtimeLibs pkgs)} $out/bin/psd-viewer

@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=PSD Viewer
+Comment=Read-only PSD viewer with layer toggling
+Exec=psd-viewer %f
+Icon=image-x-generic
+Terminal=false
+Categories=Graphics;Viewer;
+MimeType=image/vnd.adobe.photoshop;
+StartupWMClass=psd-viewer

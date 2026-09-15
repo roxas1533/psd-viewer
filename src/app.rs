@@ -2,7 +2,7 @@ use std::collections::HashSet;
 use std::path::PathBuf;
 use std::sync::Arc;
 use std::sync::mpsc::{Receiver, channel};
-use std::time::Duration;
+use std::time::{Duration, Instant};
 
 use eframe::egui::{
     self, Color32, ColorImage, Key, KeyboardShortcut, Modifiers, Pos2, Rect, RichText, Sense, TextureHandle,
@@ -22,6 +22,10 @@ const QUIT_SHORTCUT: KeyboardShortcut = KeyboardShortcut::new(Modifiers::COMMAND
 
 const MIN_ZOOM: f32 = 0.01;
 const MAX_ZOOM: f32 = 64.0;
+
+/// 描画間隔の下限（60fps）。静止画のビューアなので、ドラッグ中などに回りすぎないことだけを保証する。
+/// Linux では垂直同期を切っている（main.rs）ので、これがないと再描画が続くと際限なく回る。
+const MIN_FRAME_INTERVAL: Duration = Duration::from_micros(1_000_000 / 60);
 
 pub struct ViewerApp {
     worker: Worker,
@@ -53,6 +57,7 @@ pub struct ViewerApp {
     zoom: f32,
     pan: Vec2,
     fit_pending: bool,
+    last_frame_at: Option<Instant>,
 }
 
 impl ViewerApp {
@@ -89,6 +94,7 @@ impl ViewerApp {
             zoom: 1.0,
             pan: Vec2::ZERO,
             fit_pending: false,
+            last_frame_at: None,
         };
         if let Some(path) = initial_path {
             app.open(path);
@@ -388,6 +394,16 @@ impl ViewerApp {
 }
 
 impl eframe::App for ViewerApp {
+    fn logic(&mut self, _ctx: &egui::Context, _frame: &mut eframe::Frame) {
+        if let Some(prev) = self.last_frame_at {
+            let elapsed = prev.elapsed();
+            if elapsed < MIN_FRAME_INTERVAL {
+                std::thread::sleep(MIN_FRAME_INTERVAL - elapsed);
+            }
+        }
+        self.last_frame_at = Some(Instant::now());
+    }
+
     fn ui(&mut self, ui: &mut egui::Ui, _frame: &mut eframe::Frame) {
         let ctx = ui.ctx().clone();
         self.frame += 1;

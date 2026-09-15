@@ -26,6 +26,13 @@ fn main() -> eframe::Result {
             .with_app_id("psd-viewer")
             .with_inner_size([1280.0, 800.0])
             .with_drag_and_drop(true),
+        glow_options: eframe::egui_glow::GlowConfiguration {
+            // Wayland の EGL は垂直同期ありだと、画面更新でコンポジタのフレーム通知を待つ。
+            // 非表示のワークスペースでは通知が来ないのでメインスレッドが止まり、
+            // Hyprland が「応答しません」を出す。描画間隔は ViewerApp::logic で 60fps に制限する。
+            vsync: !cfg!(target_os = "linux"),
+            ..Default::default()
+        },
         ..Default::default()
     };
 

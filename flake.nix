@@ -47,7 +47,10 @@
             wrapProgram $out/bin/psd-viewer --set-default PSD_VIEWER_FONT ${font pkgs}
           '';
 
-          meta.mainProgram = "psd-viewer";
+          meta = {
+            mainProgram = "psd-viewer";
+            license = pkgs.lib.licenses.mit;
+          };
         };
       });
 
